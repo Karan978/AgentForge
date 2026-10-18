@@ -18,24 +18,6 @@ The project aims to organize these responsibilities into a modular, coordinated 
 
 These are project objectives; individual capabilities will be documented as they become implemented and tested.
 
-## Architecture
-
-The project is organized into specialized components:
-
-```text
-AgentForge/
-├── agents/
-│   ├── analyst.py
-│   ├── developer.py
-│   ├── qa.py
-│   └── __init__.py
-├── graph/
-│   ├── state.py
-│   ├── workflow.py
-│   └── __init__.py
-├── requirements.txt
-└── README.md
-```
 
 ### Components
 
@@ -53,7 +35,6 @@ The architecture may evolve as the system grows.
 ## Technology Stack
 
 - **Language:** Python
-- **Version control:** Git and GitHub
 - **AI integrations and orchestration:** Under development
 
 Frameworks, model providers, and additional tools will be documented as they are integrated into the project.
@@ -63,7 +44,6 @@ Frameworks, model providers, and additional tools will be documented as they are
 ### Prerequisites
 
 - Python version compatible with the project's dependencies
-- Git
 - API credentials for any external model providers used by the implementation
 
 ### Installation
