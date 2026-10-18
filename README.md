@@ -1,60 +1,81 @@
-# Multi-Agent Software Engineering System
+# AgentForge
 
-An experimental Python project exploring how multiple specialized AI agents can collaborate on software engineering tasks, including code analysis, development, and quality assurance.
+**An experimental multi-agent AI system for software engineering workflows.**
 
-## Overview
+AgentForge is a Python project exploring how specialized AI agents can collaborate to support software development tasks, from code analysis and implementation to quality assurance.
 
-The goal of this project is to build a modular multi-agent workflow in which specialized components work together to support software development tasks.
+The project aims to organize these responsibilities into a modular, coordinated workflow rather than relying on a single component to handle every stage.
 
-Rather than relying on a single AI component for every task, the system is being designed around distinct responsibilities, shared state, and a coordinated workflow.
+> **Project status:** Work in progress. Features and integrations are being developed incrementally.
 
-**Project status:** Work in progress.
+## Objectives
 
-## Planned Capabilities
-
-- **Code analysis:** Examine code and identify potential issues.
-- **Code development:** Assist with implementing changes and software features.
+- **Code analysis:** Identify potential issues and understand existing code.
+- **Code development:** Assist with implementing features and modifying existing code.
 - **Quality assurance:** Run tests and review code changes for potential defects.
-- **Workflow orchestration:** Coordinate task execution across specialized components.
-- **Modular architecture:** Keep agents, workflow logic, tools, and prompts organized separately.
+- **Workflow orchestration:** Coordinate tasks and pass relevant information between components.
+- **Modular design:** Keep agent logic, workflow state, tools, and prompts separate and maintainable.
 
-These capabilities are development goals and will be documented as they are implemented and tested.
+These are project objectives; individual capabilities will be documented as they become implemented and tested.
 
+## Architecture
+
+The project is organized into specialized components:
+
+```text
+AgentForge/
+├── agents/
+│   ├── analyst.py
+│   ├── developer.py
+│   ├── qa.py
+│   └── __init__.py
+├── graph/
+│   ├── state.py
+│   ├── workflow.py
+│   └── __init__.py
+├── requirements.txt
+└── README.md
+```
 
 ### Components
 
-- **`agents/`** — Contains the specialized components responsible for analysis, development, and quality assurance.
-- **`graph/state.py`** — Defines the shared state used to represent workflow information.
-- **`graph/workflow.py`** — Contains the workflow orchestration logic.
-- **`requirements.txt`** — Lists the Python dependencies required by the project.
+| Component | Responsibility |
+|---|---|
+| `agents/analyst.py` | Code analysis and issue identification |
+| `agents/developer.py` | Code implementation and modification |
+| `agents/qa.py` | Quality checks and test-oriented review |
+| `graph/state.py` | Shared state for workflow execution |
+| `graph/workflow.py` | Coordination and orchestration of workflow steps |
+| `requirements.txt` | Python project dependencies |
 
-The architecture may evolve as additional functionality and testing are introduced.
+The architecture may evolve as the system grows.
 
-## Tech Stack
+## Technology Stack
 
-- Python
-- AI/LLM integrations and workflow orchestration — under development
+- **Language:** Python
+- **Version control:** Git and GitHub
+- **AI integrations and orchestration:** Under development
 
-Specific frameworks and model integrations will be documented as they are incorporated into the implementation.
+Frameworks, model providers, and additional tools will be documented as they are integrated into the project.
 
 ## Getting Started
 
 ### Prerequisites
 
-- Python 3.10 or a compatible version for the project's dependencies
+- Python version compatible with the project's dependencies
 - Git
-- Access to any external model API required by the implementation
+- API credentials for any external model providers used by the implementation
 
 ### Installation
 
 Clone the repository:
 
 ```bash
-git clone <repository-url>
-cd MultiAgent_Software
+git clone https://github.com/YOUR-USERNAME/AgentForge.git
+cd AgentForge
 ```
 
-Create and activate a virtual environment.
+Create a virtual environment.
 
 **Windows (Git Bash):**
 
@@ -71,26 +92,29 @@ python -m pip install -r requirements.txt
 
 ### Configuration
 
-If the project requires API credentials, configure them through environment variables or a local `.env` file. Never commit API keys, passwords, or other secrets to version control.
+Configure any required API credentials through environment variables or a local `.env` file.
+
+Never commit API keys, passwords, or other secrets to version control.
 
 ### Running the Project
 
-The execution instructions will be added once the application entry point and workflow are ready for use.
+Execution instructions and usage examples will be added once the application entry point and end-to-end workflow are ready.
 
 ## Development Roadmap
 
-- [ ] Define shared workflow state and data structures.
+- [ ] Define the shared workflow state.
 - [ ] Implement the analysis, development, and QA components.
-- [ ] Connect components through a coordinated workflow.
-- [ ] Add automated testing and error handling.
+- [ ] Connect the components into a coordinated workflow.
 - [ ] Integrate model providers and configuration management.
-- [ ] Document usage examples and sample workflows.
-- [ ] Add end-to-end tests and evaluation criteria.
+- [ ] Add automated tests and error handling.
+- [ ] Validate the workflow with sample software engineering tasks.
+- [ ] Document setup, execution, and evaluation results.
 
-## Contributing
+## Testing
 
-This is a learning and development project. Suggestions, issue reports, and constructive feedback are welcome as the project evolves.
+Automated testing and workflow validation are planned as part of development. Test instructions and results will be documented as they become available.
+
 
 ## License
 
-No license has been added yet. Usage and redistribution permissions will be specified when a license is selected.
+No license has been selected yet. Licensing and reuse terms will be added when a license is chosen.
