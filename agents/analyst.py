@@ -2,7 +2,7 @@ from langchain_core.messages import SystemMessage, HumanMessage
 from config import get_llm
 from graph.state import AgentState
 
-from tools.filesystem import list_files,read_files
+from tools.filesystem import list_files,read_file
 
 llm = get_llm()
 
@@ -89,6 +89,6 @@ def software_analyst(state: AgentState) -> AgentState:
 
     return {
         **state,
-        "analysis": analysis,
+        "Analysis": analysis,
         "implementation_plan": analysis
     }
