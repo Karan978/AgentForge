@@ -1,18 +1,33 @@
+from typing import Literal
+
 from langchain_core.messages import (
     SystemMessage,
     HumanMessage,
 )
+from pydantic import BaseModel, Field
 
 from config import get_llm
 
 from graph.state import AgentState
 
-from tools.shell import run_command
+from tools.shell import run_tests
 
 from tools.git import git_diff
 
 
-llm = get_llm()
+class QAReview(BaseModel):
+    """Structured QA review, so the verdict never has to be parsed from text."""
+
+    review: str = Field(
+        description=(
+            "The full technical review in Markdown: findings per area, "
+            "confirmed issues vs potential risks, and the reasoning behind "
+            "the verdict with the most important actions required."
+        )
+    )
+    verdict: Literal["APPROVED", "CHANGES_REQUESTED"] = Field(
+        description="APPROVED only if the implementation should be accepted."
+    )
 
 
 SYSTEM_PROMPT = """
@@ -69,13 +84,8 @@ merely passing the available tests.
 
 Your final assessment must clearly state whether the
 implementation should be accepted or requires further
-changes.
-
-Use exactly one of the following verdicts:
-
-APPROVED
-
-CHANGES_REQUESTED
+changes. Put the full review in the `review` field and set
+the `verdict` field to APPROVED or CHANGES_REQUESTED.
 """
 
 
@@ -96,16 +106,15 @@ def qa_reviewer(
     # Run automated tests
     # ---------------------------------------------------------
 
-    test_output = run_command(
-        "pytest",
-        repo_path,
-    )
+    # Pass/fail comes from pytest's exit code, not from searching the
+    # output. "No tests collected" (exit code 5) counts as not passed:
+    # the developer is required to add tests, and the reason is shown
+    # in the test output that is fed back to it.
+    test_run = run_tests(repo_path)
 
-    tests_passed = (
-        "failed" not in test_output.lower()
-        and "error" not in test_output.lower()
-        and "exit code: 0" in test_output.lower()
-    )
+    test_output = str(test_run)
+
+    tests_passed = test_run.passed
 
     # ---------------------------------------------------------
     # Get code changes
@@ -206,21 +215,16 @@ Separate confirmed issues from potential risks.
 Do not invent problems that are not supported by the provided
 code, test results, or requirements.
 
-At the end, provide a concise final assessment.
+At the end, provide a concise final assessment: explain the
+reasoning behind the verdict and identify the most important
+actions required before acceptance, if any.
 
-Use exactly one verdict:
-
-APPROVED
-
-or
-
-CHANGES_REQUESTED
-
-Then explain the reasoning behind the verdict and identify
-the most important actions required before acceptance, if any.
+Set the verdict field to APPROVED or CHANGES_REQUESTED.
 """
 
-    response = llm.invoke(
+    result: QAReview = get_llm().with_structured_output(
+        QAReview
+    ).invoke(
         [
             SystemMessage(
                 content=SYSTEM_PROMPT
@@ -231,17 +235,15 @@ the most important actions required before acceptance, if any.
         ]
     )
 
-    review = response.content
+    review = f"{result.review}\n\nVERDICT: {result.verdict}"
 
-    review_passed = (
-        "APPROVED" in review.upper()
-        and "CHANGES_REQUESTED"
-        not in review.upper()
-    )
+    review_passed = result.verdict == "APPROVED"
 
     return {
         **state,
+        "diff": diff,
         "test_output": test_output,
+        "test_exit_code": test_run.exit_code,
         "tests_passed": tests_passed,
         "review": review,
         "review_passed": review_passed,

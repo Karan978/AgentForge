@@ -1,6 +1,8 @@
 import argparse
+import sys
 
 from graph.workflow import build_graph
+from tools.git import working_tree_problem
 
 
 def main():
@@ -22,6 +24,18 @@ def main():
     )
 
     args = parser.parse_args()
+
+    # ---------------------------------------------------------
+    # Require a clean git working tree
+    # ---------------------------------------------------------
+    # The agents edit the repository in place. Starting clean means
+    # the final diff contains only their changes and can be reverted.
+
+    problem = working_tree_problem(args.repo)
+
+    if problem:
+        print(f"Cannot start: {problem}", file=sys.stderr)
+        sys.exit(1)
 
     # ---------------------------------------------------------
     # Build LangGraph
@@ -78,6 +92,24 @@ def main():
         )
     )
 
+    print("\nCHANGED FILES")
+    print("-" * 80)
+
+    print(
+        "\n".join(result.get("changed_files", []))
+        or "None"
+    )
+
+    print("\nDIFF")
+    print("-" * 80)
+
+    print(
+        result.get(
+            "diff",
+            "",
+        )
+    )
+
     print("\nTEST RESULTS")
     print("-" * 80)
 
@@ -101,14 +133,15 @@ def main():
     print("\nSTATUS")
     print("-" * 80)
 
-    if (
-        result.get("tests_passed")
-        and result.get("review_passed")
-    ):
-        print("SUCCESS")
+    print(result.get("final_status", "UNKNOWN"))
+    print(result.get("final_reason", ""))
 
-    else:
-        print("NEEDS HUMAN REVIEW")
+    if result.get("final_status") != "SUCCESS":
+        print()
+        print("NEEDS HUMAN REVIEW. The changes were left in the repository.")
+        print("To discard them (the tree was clean before the run):")
+        print(f'  git -C "{args.repo}" restore --staged --worktree .')
+        print(f'  git -C "{args.repo}" clean -fd')
 
     print()
 

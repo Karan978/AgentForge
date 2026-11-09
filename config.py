@@ -1,3 +1,5 @@
+from functools import lru_cache
+
 from dotenv import load_dotenv
 from langchain_openai import ChatOpenAI
 
@@ -5,9 +7,13 @@ from langchain_openai import ChatOpenAI
 load_dotenv()
 
 
+@lru_cache(maxsize=1)
 def get_llm() -> ChatOpenAI:
     """
     Create and return the LLM used by all agents.
+
+    Cached so every agent shares one client, and called lazily from
+    inside the agents so importing a module never needs credentials.
     """
 
     api_key = ""

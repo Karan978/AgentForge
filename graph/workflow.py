@@ -45,6 +45,50 @@ def route_after_qa(
     return "developer"
 
 
+def finalize(
+    state: AgentState,
+) -> AgentState:
+    """
+    Record why the workflow ended, so success, rejection and an
+    exhausted retry budget can be told apart.
+    """
+
+    tests_passed = state.get("tests_passed", False)
+    review_passed = state.get("review_passed", False)
+
+    if tests_passed and review_passed:
+        return {
+            **state,
+            "final_status": "SUCCESS",
+            "final_reason": "Tests passed and QA approved the change.",
+        }
+
+    reasons = []
+
+    if not tests_passed:
+        exit_code = state.get("test_exit_code")
+        if exit_code == 5:
+            reasons.append("no tests were collected")
+        elif exit_code is None:
+            reasons.append("tests did not complete")
+        else:
+            reasons.append(f"tests failed (pytest exit code {exit_code})")
+
+    if not review_passed:
+        reasons.append("QA requested changes")
+
+    return {
+        **state,
+        "final_status": "FAILED",
+        "final_reason": (
+            f"Stopped after {state.get('iteration', 0)} of "
+            f"{MAX_ITERATIONS} developer attempts: "
+            + "; ".join(reasons)
+            + "."
+        ),
+    }
+
+
 def build_graph():
 
     workflow = StateGraph(
@@ -68,6 +112,11 @@ def build_graph():
     workflow.add_node(
         "qa",
         qa_reviewer,
+    )
+
+    workflow.add_node(
+        "finalize",
+        finalize,
     )
 
     # ---------------------------------------------------------
@@ -101,8 +150,13 @@ def build_graph():
         route_after_qa,
         {
             "developer": "developer",
-            "finish": END,
+            "finish": "finalize",
         },
+    )
+
+    workflow.add_edge(
+        "finalize",
+        END,
     )
 
     return workflow.compile()

@@ -1,10 +1,11 @@
 from langchain_core.messages import SystemMessage, HumanMessage
+from langchain_core.tools import tool
+
+from agents.tool_loop import run_tool_loop
 from config import get_llm
 from graph.state import AgentState
+from tools.filesystem import list_files, read_file
 
-from tools.filesystem import list_files,read_file
-
-llm = get_llm()
 
 SYSTEM_PROMPT = """
 You are a senior software engineer acting as a
@@ -14,7 +15,11 @@ Your responsibility is to understand an existing
 software repository and create a precise implementation
 plan.
 
-You MUST NOT modify files.
+You MUST NOT modify files. You only have read-only tools.
+
+Use the read_file tool to inspect the source files and
+tests that are relevant to the task before drawing
+conclusions.
 
 Your analysis should identify:
 
@@ -35,10 +40,21 @@ software engineer to implement the task.
 Do not invent files or APIs that you have not observed.
 """
 
+
+def _make_tools(repo_path: str):
+
+    @tool("read_file")
+    def read_file_tool(file_path: str) -> str:
+        """Read a file. `file_path` is relative to the repository root."""
+        return read_file(repo_path, file_path)
+
+    return [read_file_tool]
+
+
 def software_analyst(state: AgentState) -> AgentState:
     repo_path = state["repo_path"]
     task = state["task"]
-    #Inspect Repository
+    # Inspect Repository
     files = list_files(repo_path)
     prompt = f"""
     Engineering task:
@@ -56,7 +72,7 @@ def software_analyst(state: AgentState) -> AgentState:
     {files}
 
 
-    Analyze this repository and produce:
+    Read the files relevant to the task, then produce:
 
     ## Repository Analysis
 
@@ -78,17 +94,18 @@ def software_analyst(state: AgentState) -> AgentState:
 
     Identify potential regressions and edge cases.
     """
-    response = llm.invoke(
-        [
-            SystemMessage(content = SYSTEM_PROMPT),
-            HumanMessage(content = prompt)
-        ]
-    )
 
-    analysis = response.content
+    analysis = run_tool_loop(
+        get_llm(),
+        _make_tools(repo_path),
+        [
+            SystemMessage(content=SYSTEM_PROMPT),
+            HumanMessage(content=prompt),
+        ],
+    )
 
     return {
         **state,
-        "Analysis": analysis,
-        "implementation_plan": analysis
+        "analysis": analysis,
+        "implementation_plan": analysis,
     }
