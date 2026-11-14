@@ -120,6 +120,10 @@ def run_tests(
     env = dict(os.environ)
     env["PYTHONDONTWRITEBYTECODE"] = "1"
 
+    # The tests are the target repository's code: don't hand them the
+    # OpenAI key if it was set as an environment variable.
+    env.pop("OPENAI_API_KEY", None)
+
     try:
         result = subprocess.run(
             [

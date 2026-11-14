@@ -72,13 +72,84 @@ python -m pip install -r requirements.txt
 
 ### Configuration
 
-Configure any required API credentials through environment variables or a local `.env` file.
+AgentForge needs an OpenAI API key. Put it in the `.env` file in the project folder:
+
+```
+OPENAI_API_KEY=sk-...
+```
+
+If `.env` is missing, create it by copying the template:
+
+```bash
+cp .env.example .env
+```
+
+On Windows Command Prompt or Anaconda Prompt, use `copy .env.example .env`.
+
+- `.env` is listed in `.gitignore`, so it is never committed. `.env.example` is committed and must never contain a real key.
+- An `OPENAI_API_KEY` environment variable, if set, takes precedence over `.env`.
+- The key is not passed to the target repository's tests when they run.
 
 Never commit API keys, passwords, or other secrets to version control.
 
 ### Running the Project
 
-Execution instructions and usage examples will be added once the application entry point and end-to-end workflow are ready.
+AgentForge works on a **local folder** that is a git repository. It does not accept a git URL and does not clone, download, or copy anything. To work on a remote repository, clone it first and pass the local path.
+
+#### Requirements for the target repository
+
+- **It is a git repository** with at least one commit. Pass its top-level folder, the one that contains `.git`.
+- **Its working tree is clean.** Commit or stash your changes first. AgentForge refuses to start otherwise, so that the final diff contains only the agents' changes and can be reverted.
+- **Its dependencies are installed in the same Python environment as AgentForge.** Tests run with `python -m pytest` using AgentForge's interpreter.
+- **Git is installed and on your `PATH`.**
+
+#### Usage
+
+```bash
+python main.py --repo "<path-to-local-repository>" --task "<engineering task>"
+```
+
+Example:
+
+```bash
+python main.py --repo "C:/Users/me/projects/calculator" --task "Make add() raise TypeError for non-numeric input, with tests"
+```
+
+#### What happens
+
+1. **Analyst:** reads the relevant files and writes an implementation plan. It does not modify anything.
+2. **Developer:** edits and creates files in the repository, writes tests, and runs them.
+3. **QA:** runs the test suite, reviews the full diff, and returns `APPROVED` or `CHANGES_REQUESTED`.
+4. If tests fail or QA requests changes, the Developer tries again with QA's feedback, up to 3 attempts.
+
+At the end, AgentForge prints the analysis, developer summary, changed files, diff, test results, code review, and a final status (`SUCCESS` or `FAILED`, with the reason).
+
+#### Reviewing the result
+
+AgentForge **edits files directly in the folder you pass**. It **never commits, pushes, or switches branches**. All changes are left uncommitted for you to review:
+
+```bash
+cd "<path-to-local-repository>"
+git status
+git diff
+```
+
+- **To keep the changes:** commit them yourself.
+- **To discard them:** run the commands printed at the end of a failed run:
+
+  ```bash
+  git -C "<path-to-local-repository>" restore --staged --worktree .
+  git -C "<path-to-local-repository>" clean -fd
+  ```
+
+  `git clean -fd` deletes untracked files. This is safe only because the tree was clean before the run.
+
+#### Important notes
+
+- **Code is sent to OpenAI.** File names, the contents of files the agents read, the diff, and the test output are sent to the OpenAI API. Do not run AgentForge on code you are not permitted to share.
+- **Only run it on repositories you trust.** Running the test suite executes the repository's code on your machine, with your environment variables.
+- **Do not point `--repo` at the AgentForge folder itself.**
+- **Try it on a small throwaway repository first,** or on a separate clone (`git clone <original> <copy>`), so your original folder is never touched.
 
 ## Development Roadmap
 

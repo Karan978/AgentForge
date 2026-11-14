@@ -1,26 +1,8 @@
 # Requires Python 3.10 or newer.
-#
-# Direct dependencies of AgentForge, pinned to exact versions.
-# Each was released at least two weeks before it was pinned (2026-11-09).
-
-# LLM framework: messages, @tool, bind_tools, with_structured_output
 langchain-core==1.7.0
-
-# ChatOpenAI client (config.py)
 langchain-openai==1.7.3
-
-# OpenAI SDK used by langchain-openai; pinned so an install does not
-# pull in a brand-new release
 openai==3.39.0
-
-# Workflow graph: StateGraph, END (graph/workflow.py)
 langgraph==1.2.18
-
-# Loads .env (config.py)
 python-dotenv==1.2.4
-
-# Structured QA verdict model (agents/qa.py)
 pydantic==2.14.1
-
-# Test runner invoked by tools/shell.py via `python -m pytest`
 pytest==9.1.1
